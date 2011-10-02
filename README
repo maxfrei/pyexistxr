@@ -1,0 +1,7 @@
+eXist database proxy via XML-RPC
+
+= Dependencies =
+
+* Python 2.5 or greater
+* lxml [http://lxml.de/]
+* eXist DB [http://www.exist-db.org/]
