@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 import os, sys, xmlrpclib
-from lxml import etree
+from query import Query
+
+class ExistExc(Exception):
+	def __init__(self, message = "Unknown error"):
+		self.error = message
+
+	def __str__(self):
+		return self.error
 
 class PyExistXR(object):
     options = {
@@ -9,41 +16,69 @@ class PyExistXR(object):
         "omit-xml-declaration": "yes"
     }
     
-    def __init__(self, collection = None):
-        self.url = ""
-        self.proxy = None
-        self.query = Query(self, collection)
+    def __init__(self, url, collection = None, verbose = False):
+        self.proxy = self.connect(url, verbose)
+        self.collection = collection or ""
         self.options = xmlrpclib.DictType(self.options)
 
-    def connect(self, host, port, username, passwd = "", verbose = False):
-        self.url = "http://%s:%s@%s:%s/exist/xmlrpc" % (username, passwd, host, port)
-        self.proxy = xmlrpclib.ServerProxy(self.url, verbose = verbose)
-        return True
+    def connect(self, url, verbose):
+        return xmlrpclib.ServerProxy(url, verbose = verbose)
 
-    def get_document(self, path):
+    def query(self, qtext):
         """
-        @path as string
-        Retrieves a document from the database.
+        Make xquery
+        @qtext - query text as string
         """
-        #f = self.proxy.getDocument # return byte
-        f = self.proxy.getDocumentAsString # return str
-        return f(path, self.options)
+        q = Query(self.proxy)
+        data = q.send(qtext)
+        if q.length == 0:
+            return None
+        elif q.length == 1: 
+            return q.parse_answer(data.next())
+        else:
+            return map(q.parse_answer, data)
 
-    def store_document(self, doc, path, overwrite = 0):
+    def xpath(self, qtext):
         """
-        Inserts a new document into the database or replace an existing one.
-        @doc as string
-        @path as string
-        @overwrite as bool - default false
+        Return list of items
         """
-        return self.proxy.parse(doc, path, overwrite)
+        if self.collection:
+            qtext = "collection('%s')%s" % (self.collection, qtext)
+        q = Query(self.proxy)
+        data = q.send(qtext)
+        return map(q.parse_answer, data)
 
-    def remove_document(self, path):
+    def func(self, module, func, *args, **kwargs):
         """
-        Removes a document from the database.
-        @path as string
+        Call remote xquery function.
+        
+        @module - exist module
+        @func - function in module
+        @args - function arguments - a, b, c
+        @ns - namespace 'http://localhost/example/' at 'xmldb:exist:///db/example.xq'
         """
-        return self.proxy.remove(path)
+        q = Query(self.proxy)
+        ns = kwargs.get("ns", None) or "'http://localhost/%s/' at 'xmldb:exist:///db/%s.xq'" % (module, module)
+        context = {
+            "module": module,
+            "func": func,
+            "args": ", ".join(q.parse_arg(i) for i in args),
+            "ns": ns
+        }
+        qtext = """import module namespace %(module)s = %(ns)s;
+                    %(module)s:%(func)s(%(args)s)""" % context
+
+        data = q.send(qtext)
+        if q.length == 0:
+            return None
+        elif q.length == 1: 
+            return q.parse_answer(data.next())
+        else:
+            return map(q.parse_answer, data)
+
+    def q(self, qtext, max_length = 1000, ind = 1):
+        res = self.proxy.query(qtext, max_length, ind, {})
+        return res.encode("utf8")
 
     def create_collection(self, name):
         """
@@ -58,84 +93,28 @@ class PyExistXR(object):
         @name as string
         """
         return self.proxy.removeCollection(path)
-    
 
-class Query(object):
-    def __init__(self, db, collection):
-        self.db = db
-        self.coll = collection or ""
-        self.params = {}
-
-    def send(self, qtext):
-        q_id = self.db.proxy.executeQuery(qtext, self.params)
-        q_info = self._qinfo(q_id)
-        q_len = q_info.get("hits")
-        return {"len": q_len, "data": self._fetch(q_id, q_len)}
-
-    def _fetch(self, q_id, q_len = None):
-        q_len = q_len or self.db.proxy.getHits(q_id)
-        for i in xrange(q_len):
-            yield self.db.proxy.retrieve(q_id, i, self.params)
-
-    def _qinfo(self, q_id):
-        return self.db.proxy.querySummary(q_id)
-    
-    def xpath(self, qtext, as_xml = False):
+    def store_document(self, doc, path, overwrite = 0):
         """
-        Return list of items
+        Inserts a new document into the database or replace an existing one.
+        @doc as string
+        @path as string
+        @overwrite as bool - default false
         """
-        res = self.send(qtext)
-        return [self._parse_answer(item, as_xml) for item in res["data"]]
+        return self.proxy.parse(doc, path, overwrite)
 
-    def func(self, module, func, ns = None, as_xml = False, *args):
+    def get_document(self, path):
         """
-        Call remote xquery function.
-        
-        @module - exist module
-        @func - function in module
-        @args - function arguments
-        @kwargs - additional parameters
+        @path as string
+        Retrieves a document from the database.
         """
-        ns = ns or "'http://localhost/%s/' at 'xmldb:exist:///db/%s.xq'" % (module, module)
-        context = {
-            "module": module,
-            "func": func,
-            "args": ", ".join(self._parse_arg(i) for i in args),
-            "ns": ns
-        }
-        qtext = """import module namespace %(module)s = %(ns)s;
-                    %(module)s:%(func)s(%(args)s)""" % context
+        #f = self.proxy.getDocument # return byte
+        f = self.proxy.getDocumentAsString # return str
+        return f(path, self.options)
 
-        res = self.send(qtext)
-        data = res["data"]
-        if res["len"] == 1:
-            return self._parse_answer(data.next(), as_xml)
-        else:
-            return [self._parse_answer(item, as_xml) for item in data]
-
-    def _parse_arg(self, val):
-        if isinstance(val, str):
-            arg = "'%s'" % val
-        elif isinstance(val, unicode):
-            arg = "'%s'" % val.encode("utf8")
-        elif isinstance(val, etree._Element):
-            arg = etree.tostring(val)
-        else:
-            arg = str(val)
-        return arg
-
-    def _parse_answer(self, item, as_xml):
-        if isinstance(item, xmlrpclib.Binary):
-            item = item.data
-        else:
-            item = str(item)
-        if as_xml:
-            item = etree.fromstring(item)
-        return item
-
-    def q(self, qtext):
-        set_length = 1000
-        first_item_index = 1
-        res = self.db.proxy.query(qtext, set_length, first_item_index, self.params)
-        return res.encode("utf8")
-
+    def remove_document(self, path):
+        """
+        Removes a document from the database.
+        @path as string
+        """
+        return self.proxy.remove(path)
