@@ -48,7 +48,8 @@ class Query(object):
 
     def __iter__(self):
         while True:
-            yield self.data.next()
+            item = self.data.next()
+            yield self.parse_answ(item)
 
     def _data(self, q_id):
         for i in xrange(self.length):
