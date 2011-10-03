@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os, sys, random, unittest
-sys.path.append("/Users/lesha/work/PyExistXR/")
 from pyexistxr import PyExistXR
 from lxml import etree
 
@@ -68,7 +67,8 @@ class TestPyExistXR(unittest.TestCase):
 
     def xpath(self):
         print "Verify xpath...",
-        res = self.db.xpath("//ul[@id eq 'test']//li")
+        q = self.db.xpath("//ul[@id eq 'test']//li")
+        res = q.fetch_all()
         self.assertEqual(len(res), 3)
         print "successful."
 
@@ -76,13 +76,15 @@ class TestPyExistXR(unittest.TestCase):
         print "Verify func...",
         arg = "ololo"
         ns = "'http://localhost/func/' at 'xmldb:exist:///db/test/func.xq'"
-        res = self.db.func("func", "test", arg, ns = ns)
+        q = self.db.func("func", "test", arg, ns = ns)
+        res = q.fetch()
         self.assertEqual(res, arg)
         print "successful."
 
     def query(self):
         print "Verify query...",
-        res = self.db.query("collection('/db/pytest')//ul[@id = 'test']/li[2]/text()")
+        q = self.db.query("collection('/db/pytest')//ul[@id = 'test']/li[2]/text()")
+        res = q.fetch()
         self.assertEqual(res, 'second')
         print "successful."
 

@@ -30,23 +30,13 @@ class PyExistXR(object):
         @qtext - query text as string
         """
         q = Query(self.proxy)
-        data = q.send(qtext)
-        if q.length == 0:
-            return None
-        elif q.length == 1: 
-            return q.parse_answer(data.next())
-        else:
-            return map(q.parse_answer, data)
+        return q.send(qtext)
 
     def xpath(self, qtext):
-        """
-        Return list of items
-        """
         if self.collection:
             qtext = "collection('%s')%s" % (self.collection, qtext)
         q = Query(self.proxy)
-        data = q.send(qtext)
-        return map(q.parse_answer, data)
+        return q.send(qtext)
 
     def func(self, module, func, *args, **kwargs):
         """
@@ -67,14 +57,7 @@ class PyExistXR(object):
         }
         qtext = """import module namespace %(module)s = %(ns)s;
                     %(module)s:%(func)s(%(args)s)""" % context
-
-        data = q.send(qtext)
-        if q.length == 0:
-            return None
-        elif q.length == 1: 
-            return q.parse_answer(data.next())
-        else:
-            return map(q.parse_answer, data)
+        return q.send(qtext)
 
     def q(self, qtext, max_length = 1000, ind = 1):
         res = self.proxy.query(qtext, max_length, ind, {})

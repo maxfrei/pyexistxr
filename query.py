@@ -12,30 +12,45 @@ class Query(object):
 
     def send(self, qtext):
         q_id = self.proxy.executeQuery(qtext, self.params)
-        #self.info = self._info(q_id)
+        self.info = self._info(q_id)
         self.length = self._length(q_id)
-        self.data = self._fetch(q_id)
-        return self.data
+        self.data = self._data(q_id)
+        return self
+
+    def fetch(self):
+        try:
+            item = self.data.next()
+            return self.parse_answ(item)
+        except StopIteration:
+            return None
+
+    def fetch_all(self):
+        return map(self.parse_answ, self.data)
 
     def parse_arg(self, val):
-        if isinstance(val, str):
+        if isinstance(val, str) or isinstance(val, unicode):
             arg = "'%s'" % val
-        elif isinstance(val, unicode):
-            arg = "'%s'" % val.encode("utf8")
         elif isinstance(val, etree._Element):
             arg = etree.tostring(val)
         else:
             arg = str(val)
         return arg
 
-    def parse_answer(self, item):
+    def parse_answ(self, item):
         if isinstance(item, xmlrpclib.Binary):
             item = item.data
         else:
             item = str(item)
         return item
 
-    def _fetch(self, q_id):
+    def __len__(self):
+        return self.length
+
+    def __iter__(self):
+        while True:
+            yield self.data.next()
+
+    def _data(self, q_id):
         for i in xrange(self.length):
             yield self.proxy.retrieve(q_id, i, self.params)
 
@@ -44,4 +59,5 @@ class Query(object):
 
     def _length(self, q_id):
         return self.proxy.getHits(q_id)
+
 
