@@ -6,15 +6,15 @@ setup(name = "pyexistxr",
       description = "eXist database proxy via XML-RPC",
       author = "Sviridov Alexey",
       author_email = "sviridov84@gmail.com",
-      url = "https://github.com/maxfrei/PyExistXR",
-      packages = ['pyexistxr'],
+      url = "https://github.com/maxfrei/pyexistxr",
+      package_dir={'pyexistxr': ''},
+      packages=['pyexistxr'],
       license = "GPL-2",
       classifiers=(
           'Development Status :: 2 - Pre-Alpha',
           'Environment :: Console',
           'License :: OSI Approved :: GNU General Public License (GPL)',
           'Operating System :: POSIX',
-          'Operating System :: Unix',
           'Programming Language :: Python',
           )
       )
