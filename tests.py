@@ -52,8 +52,8 @@ class TestPyExistXR(unittest.TestCase):
     def store_doc(self):
         print "Storing document... ",
         path = os.path.join(self.test_coll_path, self.test_doc_name)
-        res = self.db.store_document(self.test_doc,
-                                     path,
+        res = self.db.store_document(path,
+                                     self.test_doc,
                                      overwrite = self.overwrite_doc)
         self.assertEqual(res, True)
         print "successful."

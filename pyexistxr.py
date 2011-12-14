@@ -80,16 +80,24 @@ class PyExistXR(object):
         """
         return self.proxy.removeCollection(path)
 
-    def store_document(self, doc, path, overwrite = 0):
+    def store_document(self, path, doc, overwrite = 0):
         """
-        Inserts a new document into the database or replace an existing one.
+        Inserts a new xml document into the database or replace an existing one.
         @doc as string
         @path as string
-        @overwrite as bool - default false
+        @overwrite as int
         """
         return self.proxy.parse(doc, path, overwrite)
 
-    def store(self, path, doc_name, chunk_size = 65536, overwrite = 0):
+    def store(self, path, doc_name, chunk_size = 65536, mimetype = None, overwrite = 0):
+        """
+        Store file into the database or replace an existing one.
+        @path - path to local file as string
+        @doc_name - full path to file in database as string
+        @chunk_size as int
+        @mimetype as string
+        @overwrite as int
+        """
         f = open(path, "rb")
         chunk = f.read(chunk_size)
         tmp_fname = self.proxy.upload(xmlrpclib.Binary(chunk), len(chunk))
@@ -97,8 +105,8 @@ class PyExistXR(object):
             chunk = f.read(chunk_size)
             if chunk:
                 self.proxy.upload(tmp_fname, xmlrpclib.Binary(chunk), len(chunk))
-        mtype = mimetypes.guess_type(path)
-        return self.proxy.parseLocal(tmp_fname, doc_name, overwrite, mtype[0])
+        mtype = mimetype or mimetypes.guess_type(path)[0]
+        return self.proxy.parseLocal(tmp_fname, doc_name, overwrite, mtype)
 
     def get_document(self, path):
         """
