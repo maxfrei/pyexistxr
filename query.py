@@ -51,6 +51,12 @@ class Query(object):
             item = self.data.next()
             yield self.parse_answ(item)
 
+    def __getitem__(self, key):
+        return self.fetch_all()[key] # fix
+
+    def __getslice__(self, start = 0, end = 2147483647):
+        return self.fetch_all()[start: end] # fix
+
     def _data(self, q_id):
         for i in xrange(self.length):
             yield self.proxy.retrieve(q_id, i, self.params)
