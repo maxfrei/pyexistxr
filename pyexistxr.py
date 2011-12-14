@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import os, sys, xmlrpclib, mimetypes
 from query import Query
+
 mimetypes.add_type("application/xquery", ".xqm", strict=True)
 mimetypes.add_type("application/xquery", ".xql", strict=True)
 mimetypes.add_type("application/xquery", ".xq", strict=True)
+mimetypes.add_type("application/xquery", ".xquery", strict=True)
 
 class ExistExc(Exception):
-	def __init__(self, message = "Unknown error"):
+	def __init__(self, message = "Database error"):
 		self.error = message
 
 	def __str__(self):
