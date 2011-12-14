@@ -41,7 +41,7 @@ class Query(object):
             item = item.data
         else:
             item = str(item)
-        return item
+        return etree.fromstring(item)
 
     def __len__(self):
         return self.length

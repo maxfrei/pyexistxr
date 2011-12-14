@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, xmlrpclib
+import os, sys, xmlrpclib, mimetypes
 from query import Query
 
 class ExistExc(Exception):
@@ -85,6 +85,17 @@ class PyExistXR(object):
         @overwrite as bool - default false
         """
         return self.proxy.parse(doc, path, overwrite)
+
+    def store(self, path, doc_name, chunk_size = 65536, overwrite = 0):
+        f = open(path, "rb")
+        chunk = f.read(chunk_size)
+        tmp_fname = self.proxy.upload(xmlrpclib.Binary(chunk), len(chunk))
+        while chunk:
+            chunk = f.read(chunk_size)
+            if chunk:
+                self.proxy.upload(tmp_fname, xmlrpclib.Binary(chunk), len(chunk))
+        mtype = mimetypes.guess_type(path)
+        return self.proxy.parseLocal(tmp_fname, doc_name, overwrite, mtype[0])
 
     def get_document(self, path):
         """
