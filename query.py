@@ -24,7 +24,7 @@ class Query(object):
         except StopIteration:
             return None
 
-    def fetch_all(self):
+    def fetchall(self):
         return map(self.parse_answ, self.data)
 
     def parse_arg(self, val):

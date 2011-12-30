@@ -2,10 +2,9 @@
 import os, sys, xmlrpclib, mimetypes
 from query import Query
 
-mimetypes.add_type("application/xquery", ".xqm", strict=True)
-mimetypes.add_type("application/xquery", ".xql", strict=True)
-mimetypes.add_type("application/xquery", ".xq", strict=True)
-mimetypes.add_type("application/xquery", ".xquery", strict=True)
+mlist = [".xqm", ".xql", ".xquery", ".xqy", "xqws"]
+for m in mlist:
+    mimetypes.add_type("application/xquery", m, strict=True)
 
 class ExistExc(Exception):
 	def __init__(self, message = "Database error"):
