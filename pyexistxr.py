@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, xmlrpclib, mimetypes
+import xmlrpclib, mimetypes
 from query import Query
 
 mlist = [".xqm", ".xql", ".xquery", ".xqy", "xqws"]

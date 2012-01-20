@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, xmlrpclib
+import xmlrpclib
 from lxml import etree
 
 class Query(object):
