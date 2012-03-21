@@ -31,7 +31,6 @@ class PyExistXR(object):
     def query(self, qtext):
         """
         Make xquery
-        @qtext - query text as string
         """
         q = Query(self.proxy)
         return q.send(qtext)
@@ -70,34 +69,29 @@ class PyExistXR(object):
     def create_collection(self, name):
         """
         Creates a new collection
-        @name as string
         """
         return self.proxy.createCollection(name)
 
     def remove_collection(self, path):
         """
         Removes a collection from the database (including all of its documents and sub-collections).
-        @name as string
         """
         return self.proxy.removeCollection(path)
 
     def store_document(self, path, doc, overwrite = 0):
         """
         Inserts a new xml document into the database or replace an existing one.
-        @doc as string
-        @path as string
-        @overwrite as int
         """
         return self.proxy.parse(doc, path, overwrite)
 
     def store(self, path, doc_name, chunk_size = 65536, mimetype = None, overwrite = 0):
         """
         Store file into the database or replace an existing one.
-        @path - path to local file as string
-        @doc_name - full path to file in database as string
-        @chunk_size as int
-        @mimetype as string
-        @overwrite as int
+        @path - path to local file
+        @doc_name - full path to file in database
+        @chunk_size
+        @mimetype
+        @overwrite
         """
         f = open(path, "rb")
         chunk = f.read(chunk_size)
@@ -111,7 +105,6 @@ class PyExistXR(object):
 
     def get_document(self, path):
         """
-        @path as string
         Retrieves a document from the database.
         """
         #f = self.proxy.getDocument # return byte
@@ -121,6 +114,5 @@ class PyExistXR(object):
     def remove_document(self, path):
         """
         Removes a document from the database.
-        @path as string
         """
         return self.proxy.remove(path)
