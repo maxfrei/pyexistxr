@@ -2,7 +2,9 @@
 import xmlrpclib
 from lxml import etree
 
+
 class Query(object):
+
     def __init__(self, proxy):
         self.proxy = proxy
         self.params = {}
@@ -52,10 +54,10 @@ class Query(object):
             yield self.parse_answ(item)
 
     def __getitem__(self, key):
-        return self.fetch_all()[key] # fix
+        return self.fetch_all()[key]
 
-    def __getslice__(self, start = 0, end = 2147483647):
-        return self.fetch_all()[start: end] # fix
+    def __getslice__(self, start=0, end=2147483647):
+        return self.fetch_all()[start: end]
 
     def _data(self, q_id):
         for i in xrange(self.length):
@@ -66,5 +68,3 @@ class Query(object):
 
     def _length(self, q_id):
         return self.proxy.getHits(q_id)
-
-
